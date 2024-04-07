@@ -3,73 +3,71 @@
 	// Include the database connection script
 	require 'includes/database-connection.php';
 
+	// Retrieve the value of the 'toynum' parameter from the URL query string
+	//		i.e., ../toy.php?toynum=0001
+	$toy_id = $_GET['toynum'];
+
 
 	/*
-	 * TO-DO: Define a function that retrives ALL customer and order info from the database based on values entered into form.
-	 		  - Write SQL query to retrieve ALL customer and order info based on form values
+	 * TO-DO: Define a function that retrieves ALL toy and manufacturer info from the database based on the toynum parameter from the URL query string.
+	 		  - Write SQL query to retrieve ALL toy and manufacturer info based on toynum
 	 		  - Execute the SQL query using the pdo function and fetch the result
-	 		  - Return the order info
+	 		  - Return the toy info
+
+	 		  Retrieve info about toy from the db using provided PDO connection
 	 */
 
-	/*
-	 * Retrieve ord information from the database based on email/order.
+	 /*
+	 * Retrieve toy information from the database based on the toy ID.
 	 * 
 	 * @param PDO $pdo       An instance of the PDO class.
-	 * @param string $id     The ID of the order to retrieve.
-	 * @return array|null    An associative array containing the order information, or null if no toy is found.
+	 * @param string $id     The ID of the toy to retrieve.
+	 * @return array|null    An associative array containing the toy information, or null if no toy is found.
 	 */
-	function get_ord(PDO $pdo, string $id) {
+	function get_toy_info(PDO $pdo, string $id) {
+
+		// SQL query to retrieve toy information based on the toy ID
+		$sql = "SELECT name, description, price, agerange, numinstock, manid, imgSrc
+ 
+			FROM toy
+			WHERE toynum= :id;";	// :id is a placeholder for value provided later 
+		                               // It's a parameterized query that helps prevent SQL injection attacks and ensures safer interaction with the database.
+
+		// Execute the SQL query using the pdo function and fetch the result
+		$toy = pdo($pdo, $sql, ['id' => $id])->fetch();		// Associative array where 'id' is the key and $id is the value. Used to bind the value of $id to the placeholder :id in  SQL query.
+
+		// Return the toy information (associative array)
+		return $toy;
+	}
+
+	
+	 /*
+	 * Retrieve toy information from the database based on the man ID.
+	 * 
+	 * @param PDO $pdo       An instance of the PDO class.
+	 * @param string $id     The ID of the toy to retrieve.
+	 * @return array|null    An associative array containing the man information, or null if no toy is found.
+	 */
+	function get_man_info(PDO $pdo, string $id) {
 
 		// SQL query to retrieve toy information based on the toy ID
 		$sql = "SELECT * 
-			FROM orders
-			WHERE ordernum = :id;";	// :id is a placeholder for value provided later 
+			FROM manuf
+			WHERE manid = :id;";	// :id is a placeholder for value provided later 
 		                               // It's a parameterized query that helps prevent SQL injection attacks and ensures safer interaction with the database.
 
-
 		// Execute the SQL query using the pdo function and fetch the result
-		$order = pdo($pdo, $sql, ['id' => $id])->fetch();		// Associative array where 'id' is the key and $id is the value. Used to bind the value of $id to the placeholder :id in  SQL query.
+		$man = pdo($pdo, $sql, ['id' => $id])->fetch();		// Associative array where 'id' is the key and $id is the value. Used to bind the value of $id to the placeholder :id in  SQL query.
 
 		// Return the toy information (associative array)
-		return $order;
+		return $man;
 	}
 
-	/*
-	 * Retrieve cust information from the database based on email/order.
-	 * 
-	 * @param PDO $pdo       An instance of the PDO class.
-	 * @param string $id     The emailof the cust to retrieve.
-	 * @return array|null    An associative array containing the cust information, or null if no toy is found.
-	 */
-	function get_cust(PDO $pdo, string $id) {
 
-		// SQL query to retrieve toy information based on the toy ID
-		$sql = "SELECT * 
-			FROM customer
-			WHERE  email = :id;";	// :id is a placeholder for value provided later 
-		                               // It's a parameterized query that helps prevent SQL injection attacks and ensures safer interaction with the database.
+	$toy_info = get_toy_info($pdo, $toy_id);
+	$man_info = get_man_info($pdo, $toy_info['manid']);
 
 
-		// Execute the SQL query using the pdo function and fetch the result
-		$cust = pdo($pdo, $sql, ['id' => $id])->fetch();		// Associative array where 'id' is the key and $id is the value. Used to bind the value of $id to the placeholder :id in  SQL query.
-
-		// Return the toy information (associative array)
-		return $cust;
-	}
-	
-	// Check if the request method is POST (i.e, form submitted)
-	if ($_SERVER["REQUEST_METHOD"] == "POST") {
-		
-		// Retrieve the value of the 'email' field from the POST data
-		$email = $_POST['email'];
-
-		// Retrieve the value of the 'orderNum' field from the POST data
-		$orderNum = $_POST['orderNum'];
-
-		$cust_info = get_cust($pdo, $email);
-		$ord_info = get_ord($pdo, $orderNum);
-	
-	}
 // Closing PHP tag  ?> 
 
 <!DOCTYPE>
@@ -109,50 +107,57 @@
 		</header>
 
 		<main>
+			<!-- 
+			  -- TO DO: Fill in ALL the placeholders for this toy from the db
+  			  -->
+			
+			<div class="toy-details-container">
+				<div class="toy-image">
+					<!-- Display image of toy with its name as alt text -->
 
-			<div class="order-lookup-container">
-				<div class="order-lookup-container">
-					<h1>Order Lookup</h1>
-					<form action="order.php" method="POST">
-						<div class="form-group">
-							<label for="email">Email:</label>
-							<input type="email" id="email" name="email" required>
-						</div>
+					<img src="<?= $toy_info['imgSrc'] ?>" alt="<?= $toy_info['name'] ?>">
 
-						<div class="form-group">
-							<label for="orderNum">Order Number:</label>
-							<input type="text" id="orderNum" name="orderNum" required>
-						</div>
-
-						<button type="submit">Lookup Order</button>
-					</form>
 				</div>
-				
-				<!-- 
-				  -- TO-DO: Check if variable holding order is not empty. Make sure to replace null with your variable!
-				  -->
-				
-				<?php if (!empty($ord_info) and !empty($cust_info)): ?>
-					<div class="order-details">
 
-						<!-- 
-				  		  -- TO DO: Fill in ALL the placeholders for this order from the db
-  						  -->
-						<h1>Order Details</h1>
-						<p><strong>Name: </strong> <?= $cust_info['cname'] ?></p>
-				        	<p><strong>Username: </strong> <?= $cust_info['username'] ?></p>
-				        	<p><strong>Order Number: </strong> <?= $ord_info['ordernum'] ?></p>
-				        	<p><strong>Quantity: </strong> <?= $ord_info['quantity'] ?></p>
-				        	<p><strong>Date Ordered: </strong> <?=$ord_info['date_ordered'] ?></p>
-				        	<p><strong>Delivery Date: </strong> <?= $ord_info['date_deliv'] ?></p>
-				      
-					</div>
-				<?php endif; ?>
+				<div class="toy-details">
 
+					<!-- Display name of toy -->
+			        <h1><?= $toy_info['name'] ?></h1>
+
+			        <hr />
+
+			        <h3>Toy Information</h3>
+
+			        <!-- Display description of toy -->
+			        <p><strong>Description:</strong> <?= $toy_info['description']  ?></p>
+
+			        <!-- Display price of toy -->
+			        <p><strong>Price:</strong> $ <?= $toy_info['price']  ?></p>
+
+			        <!-- Display age range of toy -->
+			        <p><strong>Age Range:</strong> <?= $toy_info['agerange']  ?></p>
+
+			        <!-- Display stock of toy -->
+			        <p><strong>Number In Stock:</strong> <?= $toy_info['numinstock']  ?></p>
+
+			        <br />
+
+			        <h3>Manufacturer Information</h3>
+
+			        <!-- Display name of manufacturer -->
+			        <p><strong>Name:</strong> <?= $man_info['name'] ?> </p>
+
+			        <!-- Display address of manufacturer -->
+			        <p><strong>Address:</strong> <?= $man_info['Street']  ?>, <?= $man_info['City'] ?>, <?= $man_info['State'] ?> <?= $man_info['ZipCode'] ?></p>
+
+			        <!-- Display phone of manufacturer -->
+			        <p><strong>Phone:</strong> <?= $man_info['phone']  ?></p>
+
+			        <!-- Display contact of manufacturer -->
+			        <p><strong>Contact:</strong> <?= $man_info['contact']  ?></p>
+			    </div>
 			</div>
-
 		</main>
 
 	</body>
-
 </html>
