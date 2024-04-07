@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/kevinlattuada/public_html/
+    - export DEPLOYPATH=/home/kevinlattuada/public_html/toystore
     - /bin/cp -R * $DEPLOYPATH
